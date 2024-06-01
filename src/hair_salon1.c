@@ -9,7 +9,9 @@
 #define NUM_CUSTOMERS 10
 
 sem_t waitingRoom;            // Semafor kontrolujący dostęp do krzeseł w poczekalni
+sem_t barberReady;            // Semafor informujący, że fryzjer jest gotowy do strzyżenia
 pthread_mutex_t barberChair;  // Mutex ochrony dostępu do fotela fryzjerskiego
+pthread_mutex_t printMutex;   // Mutex do synchronizacji wypisów na ekran
 int freeChairs = MAX_CHAIRS;  // Liczba wolnych krzeseł
 
 void *barber(void *arg);
@@ -20,15 +22,18 @@ int main(int argc, char *argv[]) {
     pthread_t customerThreads[NUM_CUSTOMERS];
 
     sem_init(&waitingRoom, 0, MAX_CHAIRS);
+    sem_init(&barberReady, 0, 0);
     pthread_mutex_init(&barberChair, NULL);
+    pthread_mutex_init(&printMutex, NULL);
 
     pthread_create(&barberThread, NULL, barber, NULL);
 
+    srand(time(NULL));
     for (int i = 0; i < NUM_CUSTOMERS; i++) {
         int *id = malloc(sizeof(int));
         *id = i;
         pthread_create(&customerThreads[i], NULL, customer, id);
-        usleep(rand() % 100000); // Klienci przychodzą w losowych momentach
+        sleep(rand() % 100000); // Klienci przychodzą w losowych momentach
     }
 
     void *ret_val;
@@ -41,7 +46,9 @@ int main(int argc, char *argv[]) {
     pthread_join(barberThread, NULL);
 
     sem_destroy(&waitingRoom);
+    sem_destroy(&barberReady);
     pthread_mutex_destroy(&barberChair);
+    pthread_mutex_destroy(&printMutex);
 
     return 0;
 }
@@ -51,11 +58,14 @@ void *barber(void *arg) {
         // Czeka na klienta
         sem_wait(&waitingRoom);
         pthread_mutex_lock(&barberChair);
+        pthread_mutex_lock(&printMutex);
         printf("Fryzjer strzyże klienta.\n");
-        usleep(rand() % 500000); // Symulacja strzyżenia, czas losowy
+        pthread_mutex_unlock(&printMutex);
+        sleep(rand() % 500000); // Symulacja strzyżenia, czas losowy
+        pthread_mutex_lock(&printMutex);
         printf("Fryzjer skończył strzyżenie klienta.\n");
+        pthread_mutex_unlock(&printMutex);
         pthread_mutex_unlock(&barberChair);
-        sem_post(&waitingRoom);
     }
     return NULL;
 }
@@ -63,11 +73,17 @@ void *barber(void *arg) {
 void *customer(void *num) {
     int id = *(int *)num;
     if (sem_trywait(&waitingRoom) == 0) { // Próba zajęcia miejsca
+        sem_post(&barberReady); // Sygnalizacja, że klient jest gotowy do strzyżenia
         pthread_mutex_lock(&barberChair);
+        pthread_mutex_lock(&printMutex);
         printf("Klient %d jest strzyżony.\n", id);
+        pthread_mutex_unlock(&printMutex);
+        pthread_mutex_unlock(&barberChair);
         sem_post(&waitingRoom);
     } else {
+        pthread_mutex_lock(&printMutex);
         printf("Klient %d rezygnuje z powodu braku miejsc.\n", id);
+        pthread_mutex_unlock(&printMutex);
     }
     return num;
 }
