@@ -17,6 +17,11 @@ hair_salon2: $(SRC_DIR)/hair_salon2.c
 clean:
 	rm -f $(BIN_DIR)/hair_salon1
 	rm -f $(BIN_DIR)/hair_salon2
-	rmdir $(BIN_DIR)
 
-.PHONY: all clean
+run1:
+	$(BIN_DIR)/hair_salon1
+
+run2:
+	$(BIN_DIR)/hair_salon2
+
+.PHONY: all clean run1 run2
