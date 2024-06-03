@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -26,9 +27,36 @@ pthread_mutex_t resigned_customer_counter_mutex;
 pthread_mutex_t queue_mutex;
 
 int available_seats = NUM_CHAIRS;
-int resigned_customers_counter = 0;
 int current_customer_on_barberchair = 0;
 Queue *customer_queue;
+int resigned_customers[TOTAL_CUSTOMERS];
+int resigned_customers_counter = 0;
+int print_info = 0;
+
+void print_waiting_queue()
+{
+    pthread_mutex_lock(&queue_mutex);
+    printf("Aktualna kolejka oczekujących klientów: ");
+    Node *current = customer_queue->front;
+    while (current != NULL)
+    {
+        printf("%d ", current->data);
+        current = current->next;
+    }
+    printf("\n");
+    pthread_mutex_unlock(&queue_mutex);
+}
+
+void print_resigned_customers()
+{
+    pthread_mutex_lock(&resigned_customer_counter_mutex);
+    printf("Klienci którzy nie dostali się do gabinetu: ");
+    for (int i = 0; i < resigned_customers_counter; i++) {
+        printf("%d ", resigned_customers[i]);
+    }
+    printf("\n");
+    pthread_mutex_unlock(&resigned_customer_counter_mutex);
+}
 
 __thread unsigned int thread_seed = 0;
 
@@ -50,6 +78,11 @@ unsigned int get_my_seed()
 
 int main(int argc, char *argv[])
 {
+    if (argc > 1 && strcmp(argv[1], "-info") == 0)
+    {
+        print_info = 1;
+    }
+
     pthread_t barber_thread;
     pthread_t customer_generator_thread;
 
@@ -88,6 +121,14 @@ int main(int argc, char *argv[])
 
 void print_barbershop_status()
 {
+    /*
+    if (print_info)
+    {
+        print_waiting_queue();
+        print_resigned_customers();
+    }
+    */
+
     pthread_mutex_lock(&resigned_customer_counter_mutex);
     pthread_mutex_lock(&seats_mutex);
     pthread_mutex_lock(&barberchair_mutex);
@@ -127,6 +168,10 @@ void *barber_thread_routine(void *arg)
         pthread_mutex_lock(&queue_mutex);
         int customer_id = dequeue(customer_queue);
         pthread_mutex_unlock(&queue_mutex);
+        if (print_info)
+        {
+            print_waiting_queue();
+        }
 
         sem_post(&barber_ready);
 
@@ -161,6 +206,10 @@ void *customer_thread_routine(void *arg)
         pthread_mutex_lock(&queue_mutex);
         enqueue(customer_queue, id);
         pthread_mutex_unlock(&queue_mutex);
+        if (print_info)
+        {
+            print_waiting_queue();
+        }
 
         sem_post(&customer_ready);
         sem_wait(&barber_ready);
@@ -169,9 +218,13 @@ void *customer_thread_routine(void *arg)
     {
         pthread_mutex_unlock(&seats_mutex);
         pthread_mutex_lock(&resigned_customer_counter_mutex);
-        resigned_customers_counter++;
+        resigned_customers[resigned_customers_counter++] = id;
         pthread_mutex_unlock(&resigned_customer_counter_mutex);
         print_barbershop_status();
+        if (print_info)
+        {
+            print_resigned_customers();
+        }
     }
     return NULL;
 }
