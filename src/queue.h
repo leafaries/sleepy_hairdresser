@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <semaphore.h>
 
 // Node structure for queue elements
 typedef struct node

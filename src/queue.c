@@ -1,7 +1,4 @@
 #include "queue.h"
-#include <cstddef>
-#include <cstdio>
-//#include <time.h>
 
 Node *create_node(int data)
 {

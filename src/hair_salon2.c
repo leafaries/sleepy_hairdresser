@@ -133,21 +133,10 @@ void destroy_resources()
 
 void print_barbershop_status()
 {
-    // //===== ENTRY SECTION =====//
-    //
-    // pthread_mutex_lock(&mutex);
-
-    // //===== CRITICAL SECTION =====//
-
     printf("Rezygnacja: %d Poczekalnia: %d/%d [Fotel: %d]\n", resigned_customers_counter,
                                                               NUM_CHAIRS - available_seats,
                                                               NUM_CHAIRS,
                                                               current_customer_on_barberchair);
-
-    // //===== EXIT SECTION =====//
-
-    // pthread_mutex_unlock(&mutex);
-
 }
 
 void simulate_work(int max_seconds)
@@ -213,8 +202,8 @@ void *customer_thread_routine(void *arg)
     // Check if the waiting room is full
     if (available_seats == 0)
     {
-        resigned_customers[id - 1] = 1;
-        resigned_customers_counter++;
+        resigned_customers[resigned_customers_counter++] = id;
+        print_resigned_customers(resigned_customers_counter, resigned_customers);
         pthread_mutex_unlock(&mutex);
         return NULL;
     }
