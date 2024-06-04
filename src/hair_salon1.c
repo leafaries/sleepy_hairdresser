@@ -1,4 +1,4 @@
-#include <pthread.h>
+/*#include <pthread.h>
 #include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -257,4 +257,9 @@ void *customer_generator_thread_routine(void *arg)
 
     return NULL;
 }
+*/
 
+int main()
+{
+    return 0;
+}

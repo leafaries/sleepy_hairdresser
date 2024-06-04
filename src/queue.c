@@ -1,4 +1,6 @@
 #include "queue.h"
+#include <time.h>
+
 
 Node *create_node(int data)
 {
@@ -25,10 +27,15 @@ Queue *create_queue()
     return new_queue;
 }
 
+bool queue_is_empty(Queue *q)
+{
+    return (q->front == NULL) ? true : false;
+}
+
 void enqueue(Queue *q, int data)
 {
     Node *new_node = create_node(data);
-    if (q->rear == NULL)
+    if (queue_is_empty(q))
     {
         // If the queue is empty, the new node is both the front and the rear
         q->front = q->rear = new_node;
@@ -41,7 +48,7 @@ void enqueue(Queue *q, int data)
 
 int dequeue(Queue *q)
 {
-    if (q->front == NULL)
+    if (queue_is_empty(q))
     {
         printf("Queue is empty, cannot dequeue.\n");
         return -1;
@@ -56,5 +63,27 @@ int dequeue(Queue *q)
     }
     free(temp);
     return data;
+}
+
+void print_waiting_queue(Queue *customer_queue)
+{
+    printf("Aktualna kolejka oczekujących klientów: ");
+    Node *current = customer_queue->front;
+    while (current != NULL)
+    {
+        printf("%d ", current->data);
+        current = current->next;
+    }
+    printf("\n");
+}
+
+void print_resigned_customers(int resigned_customers_counter, int *resigned_customers)
+{
+    printf("Klienci którzy nie dostali się do gabinetu: ");
+    for (int i = 0; i < resigned_customers_counter; i++)
+    {
+        printf("%d ", resigned_customers[i]);
+    }
+    printf("\n");
 }
 
