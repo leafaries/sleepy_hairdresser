@@ -14,12 +14,38 @@
 #define NUM_CHAIRS 5
 #define TOTAL_CUSTOMERS 10
 
+/**
+ * Prints the current status of the barbershop.
+ * This function acquires a mutex to safely access shared state.
+ */
 void print_barbershop_status();
-unsigned int generate_initial_seed();
-unsigned int get_my_seed();
+
+/**
+ * Simulates work by sleeping for a random amount of time up to max_seconds.
+ * @param max_seconds The maximum number of seconds the function can sleep.
+ */
 void simulate_work(int max_seconds);
+
+/**
+ * Routine for barber thread that handles customer haircuts.
+ * This function waits for customers and simulates haircuts.
+ * @param arg Unused parameter, included for compatibility with pthread_create.
+ * @return Always returns NULL.
+ */
 void *barber_thread_routine(void *arg);
+
+/**
+ * Routine for customer thread that simulates a customer visiting the barbershop.
+ * @param arg Pointer to an integer representing the customer's ID.
+ * @return Always returns NULL.
+ */
 void *customer_thread_routine(void *arg);
+
+/**
+ * Generates customer threads.
+ * @param arg Unused parameter, included for compatibility with pthread_create.
+ * @return Always returns NULL.
+ */
 void *customer_generator_thread_routine(void *arg);
 
 sem_t barber_ready;

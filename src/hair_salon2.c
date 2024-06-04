@@ -48,10 +48,10 @@ void *customer_thread_routine(void *arg);
  */
 void *customer_generator_thread_routine(void *arg);
 
-pthread_mutex_t mutex; // Global mutex for critical sections
-pthread_cond_t barber_ready; // Condition variable to notify barber is ready
+pthread_mutex_t mutex;         // Global mutex for critical sections
+pthread_cond_t barber_ready;   // Condition variable to notify barber is ready
 pthread_cond_t customer_ready; // Condition variable to notify customer is ready
-pthread_cond_t haircut_done; // Condition variable to notify haircut is done
+pthread_cond_t haircut_done;   // Condition variable to notify haircut is done
 
 int available_seats = NUM_CHAIRS;
 int current_customer_on_barberchair = 0;
