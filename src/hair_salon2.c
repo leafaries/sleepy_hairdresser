@@ -14,16 +14,44 @@
 #define NUM_CHAIRS 5
 #define TOTAL_CUSTOMERS 10
 
+/**
+ * Prints the current status of the barbershop.
+ * This function acquires a mutex to safely access shared state.
+ */
 void print_barbershop_status();
+
+/**
+ * Simulates work by sleeping for a random amount of time up to max_seconds.
+ * @param max_seconds The maximum number of seconds the function can sleep.
+ */
 void simulate_work(int max_seconds);
+
+/**
+ * Routine for barber thread that handles customer haircuts.
+ * This function waits for customers and simulates haircuts.
+ * @param arg Unused parameter, included for compatibility with pthread_create.
+ * @return Always returns NULL.
+ */
 void *barber_thread_routine(void *arg);
+
+/**
+ * Routine for customer thread that simulates a customer visiting the barbershop.
+ * @param arg Pointer to an integer representing the customer's ID.
+ * @return Always returns NULL.
+ */
 void *customer_thread_routine(void *arg);
+
+/**
+ * Generates customer threads.
+ * @param arg Unused parameter, included for compatibility with pthread_create.
+ * @return Always returns NULL.
+ */
 void *customer_generator_thread_routine(void *arg);
 
-pthread_mutex_t mutex; // Global mutex for critical sections affecting multiple variables
-pthread_cond_t barber_ready;
-pthread_cond_t customer_ready;
-pthread_cond_t haircut_done;
+pthread_mutex_t mutex; // Global mutex for critical sections
+pthread_cond_t barber_ready; // Condition variable to notify barber is ready
+pthread_cond_t customer_ready; // Condition variable to notify customer is ready
+pthread_cond_t haircut_done; // Condition variable to notify haircut is done
 
 int available_seats = NUM_CHAIRS;
 int current_customer_on_barberchair = 0;
@@ -34,7 +62,14 @@ bool print_info = false;
 
 __thread unsigned int thread_seed = 0;
 
+/**
+ * Initializes resources used in the barbershop simulation, such as mutexes and condition variables.
+ */
 void initialize_resources();
+
+/**
+ * Destroys resources used in the barbershop simulation to prevent resource leaks.
+ */
 void destroy_resources();
 
 int main(int argc, char *argv[])
@@ -98,28 +133,27 @@ void destroy_resources()
 
 void print_barbershop_status()
 {
-    //===== ENTRY SECTION =====//
+    // //===== ENTRY SECTION =====//
+    //
+    // pthread_mutex_lock(&mutex);
 
-    pthread_mutex_lock(&mutex);
-
-    //===== CRITICAL SECTION =====//
+    // //===== CRITICAL SECTION =====//
 
     printf("Rezygnacja: %d Poczekalnia: %d/%d [Fotel: %d]\n", resigned_customers_counter,
                                                               NUM_CHAIRS - available_seats,
                                                               NUM_CHAIRS,
                                                               current_customer_on_barberchair);
 
-    //===== EXIT SECTION =====//
+    // //===== EXIT SECTION =====//
 
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 
 }
 
 void simulate_work(int max_seconds)
 {
     unsigned int seed = (thread_seed == 0) ? (unsigned int)time(NULL) ^ (unsigned int)getpid() : thread_seed;
-    int time = rand_r(&seed) % (max_seconds * 1000000);
-    usleep(time);
+    usleep(rand_r(&seed) % (max_seconds * 1000000));
 }
 
 void *barber_thread_routine(void *arg)
