@@ -1,6 +1,7 @@
 #include "queue.h"
-#include <time.h>
-
+#include <cstddef>
+#include <cstdio>
+//#include <time.h>
 
 Node *create_node(int data)
 {
@@ -29,7 +30,7 @@ Queue *create_queue()
 
 bool queue_is_empty(Queue *q)
 {
-    return (q->front == NULL) ? true : false;
+    return (q->front == NULL);
 }
 
 void enqueue(Queue *q, int data)
@@ -63,6 +64,21 @@ int dequeue(Queue *q)
     }
     free(temp);
     return data;
+}
+
+void destroy_queue(Queue *q)
+{
+    Node *current = q->front;
+    Node *next = NULL;
+
+    while (current != NULL)
+    {
+        next = current->next;   // Save reference to the next node
+        free(current);          // Free the current node
+        current = next;         // Move to the next node
+    }
+
+    free(q); // Finally, free the queue structure itself
 }
 
 void print_waiting_queue(Queue *customer_queue)
