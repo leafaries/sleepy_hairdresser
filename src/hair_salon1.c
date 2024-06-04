@@ -127,7 +127,8 @@ void *barber_thread_routine(void *arg)
 
         pthread_mutex_lock(&mutex);
         // Double-check to ensure the queue isn't empty before proceeding
-        if (queue_is_empty(customer_queue)) {
+        if (queue_is_empty(customer_queue))
+        {
             pthread_mutex_unlock(&mutex);
             continue; // Go back to waiting if no customer is actually ready
         }
@@ -178,7 +179,8 @@ void *customer_thread_routine(void *arg)
     enqueue(customer_queue, id);
     available_seats--;
     print_barbershop_status();
-    if (print_info) {
+    if (print_info)
+    {
         print_waiting_queue(customer_queue);
     }
 
@@ -188,7 +190,7 @@ void *customer_thread_routine(void *arg)
     pthread_mutex_unlock(&mutex);
 
     // Wait until the barber is ready for this customer
-    sem_wait(&barber_ready);
+    sem_wait(&barber_ready); // TODO: Currently there's a posibility that it'll be starved
 
     // Wait for the haircut to complete
     sem_wait(&haircut_done);
