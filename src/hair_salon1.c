@@ -1,13 +1,13 @@
 #include <pthread.h>
 #include <semaphore.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
-#include <sys/time.h>
-#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/time.h>
+#include <sys/types.h>
 
 #include "queue.h"
 
@@ -148,7 +148,6 @@ void *barber_thread_routine(void *arg)
 {
     while (1)
     {
-
         sem_wait(&customer_ready);
 
         pthread_mutex_lock(&mutex);
@@ -216,7 +215,7 @@ void *customer_thread_routine(void *arg)
     pthread_mutex_unlock(&mutex);
 
     // Wait until the barber is ready for this customer
-    sem_wait(&barber_ready); // TODO: Currently there's a posibility that it'll be starved
+    sem_wait(&barber_ready);
 
     // Wait for the haircut to complete
     sem_wait(&haircut_done);
