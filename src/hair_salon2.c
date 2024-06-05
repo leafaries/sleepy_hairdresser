@@ -151,11 +151,11 @@ void *barber_thread_routine(void *arg)
     {
         //===== ENTRY SECTION =====//
 
-        pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&mutex); // 1.
 
         while (queue_is_empty(customer_queue))
         {
-            pthread_cond_wait(&customer_ready, &mutex);
+            pthread_cond_wait(&customer_ready, &mutex); // 2.
         }
 
         //===== CRITICAL SECTION =====//
@@ -167,22 +167,22 @@ void *barber_thread_routine(void *arg)
         {
             print_waiting_queue(customer_queue);
         }
-        pthread_cond_broadcast(&barber_ready); // Wake up all the customer threads for a moment
-        pthread_mutex_unlock(&mutex);
+        pthread_cond_broadcast(&barber_ready); // Wake up all the customer threads for a moment // 3.
+        pthread_mutex_unlock(&mutex); // 4.
 
         simulate_work(5);
 
         //===== EXIT SECTION =====//
 
-        pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&mutex); // 5.
         current_customer_on_barberchair = 0;
         print_barbershop_status();
         if (print_info)
         {
             print_waiting_queue(customer_queue);
         }
-        pthread_cond_signal(&haircut_done);
-        pthread_mutex_unlock(&mutex);
+        pthread_cond_signal(&haircut_done); // 6.
+        pthread_mutex_unlock(&mutex); // 7.
     }
 
     return NULL;
@@ -195,7 +195,7 @@ void *customer_thread_routine(void *arg)
 
     //===== ENTRY SECTION =====//
 
-    pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&mutex); // 1.
 
     //===== CRITICAL SECTION =====//
 
@@ -204,7 +204,7 @@ void *customer_thread_routine(void *arg)
     {
         resigned_customers[resigned_customers_counter++] = id;
         print_resigned_customers(resigned_customers_counter, resigned_customers);
-        pthread_mutex_unlock(&mutex);
+        pthread_mutex_unlock(&mutex); // 2.
         return NULL;
     }
 
@@ -220,21 +220,24 @@ void *customer_thread_routine(void *arg)
     // Signal the barber that a custom is ready, if the barber is sleeping
     if (current_customer_on_barberchair == 0)
     {
-        pthread_cond_signal(&customer_ready);
+        pthread_cond_signal(&customer_ready); // 3.
     }
 
     // Wait until the barber is ready for this customer
     while (current_customer_on_barberchair != id)
     {
-        pthread_cond_wait(&barber_ready, &mutex);
+        pthread_cond_wait(&barber_ready, &mutex); // 4.
     }
 
     // Wait for the haircut to complete
-    pthread_cond_wait(&haircut_done, &mutex);
+    while (current_customer_on_barberchair == 0)
+    {
+        pthread_cond_wait(&haircut_done, &mutex); // 5.
+    }
 
     //===== EXIT SECTION =====//
 
-    pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&mutex); // 6.
     return NULL;
 }
 

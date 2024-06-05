@@ -48,7 +48,6 @@ void *customer_thread_routine(void *arg);
  */
 void *customer_generator_thread_routine(void *arg);
 
-sem_t barber_ready;
 sem_t haircut_done;
 sem_t customer_ready;
 pthread_mutex_t mutex;
@@ -104,8 +103,7 @@ void initialize_resources()
         exit(EXIT_FAILURE);
     }
 
-    if (sem_init(&barber_ready, 0, 0) != 0 ||
-        sem_init(&haircut_done, 0, 0) != 0 ||
+    if (sem_init(&haircut_done, 0, 0) != 0 ||
         sem_init(&customer_ready, 0, 0) != 0)
     {
         perror("Failed to initialize a semaphore");
@@ -124,7 +122,6 @@ void initialize_resources()
 void destroy_resources()
 {
     pthread_mutex_destroy(&mutex);
-    sem_destroy(&barber_ready);
     sem_destroy(&haircut_done);
     sem_destroy(&customer_ready);
     destroy_queue(customer_queue);
@@ -148,13 +145,13 @@ void *barber_thread_routine(void *arg)
 {
     while (1)
     {
-        sem_wait(&customer_ready);
+        sem_wait(&customer_ready); // 1.
 
-        pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&mutex); // 2.
         // Double-check to ensure the queue isn't empty before proceeding
         if (queue_is_empty(customer_queue))
         {
-            pthread_mutex_unlock(&mutex);
+            pthread_mutex_unlock(&mutex); // 3.
             continue; // Go back to waiting if no customer is actually ready
         }
         current_customer_on_barberchair = dequeue(customer_queue);
@@ -164,22 +161,21 @@ void *barber_thread_routine(void *arg)
         {
             print_waiting_queue(customer_queue);
         }
-        pthread_mutex_unlock(&mutex);
-        sem_post(&barber_ready);
+        pthread_mutex_unlock(&mutex); // 4.
 
         simulate_work(5);
 
-        pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&mutex); // 5.
         current_customer_on_barberchair = 0;
         print_barbershop_status();
         if (print_info)
         {
             print_waiting_queue(customer_queue);
         }
-        pthread_mutex_unlock(&mutex);
+        pthread_mutex_unlock(&mutex); // 6.
 
         // Signal that the haircut is done
-        sem_post(&haircut_done);
+        sem_post(&haircut_done); // 7.
     }
 
     return NULL;
@@ -190,13 +186,17 @@ void *customer_thread_routine(void *arg)
     int id = *(int *)arg;
     free(arg);
 
-    pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&mutex); // 1.
 
     // Check if the waiting room is full
-    if (available_seats == 0) {
+    if (available_seats == 0)
+    {
         resigned_customers[resigned_customers_counter++] = id;
-        print_resigned_customers(resigned_customers_counter, resigned_customers);
-        pthread_mutex_unlock(&mutex);
+        if (print_info)
+        {
+            print_resigned_customers(resigned_customers_counter, resigned_customers);
+        }
+        pthread_mutex_unlock(&mutex); // 2.
         return NULL;
     }
 
@@ -210,15 +210,12 @@ void *customer_thread_routine(void *arg)
     }
 
     // Signal the barber that a customer is ready
-    sem_post(&customer_ready);
+    sem_post(&customer_ready); // 3.
 
-    pthread_mutex_unlock(&mutex);
-
-    // Wait until the barber is ready for this customer
-    sem_wait(&barber_ready);
+    pthread_mutex_unlock(&mutex); // 4.
 
     // Wait for the haircut to complete
-    sem_wait(&haircut_done);
+    sem_wait(&haircut_done); // 5.
 
     return NULL;
 }
