@@ -8,10 +8,10 @@ all: $(BIN_DIR) hair_salon1 hair_salon2
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
-hair_salon1: $(SRC_DIR)/hair_salon1.c
+hair_salon1: $(SRC_DIR)/hair_salon1.c $(SRC_DIR)/queue.h
 	$(CC) $(CFLAGS) $(SRC_DIR)/queue.c $(SRC_DIR)/hair_salon1.c -o $(BIN_DIR)/hair_salon1
 
-hair_salon2: $(SRC_DIR)/hair_salon2.c
+hair_salon2: $(SRC_DIR)/hair_salon2.c $(SRC_DIR)/queue.h
 	$(CC) $(CFLAGS) $(SRC_DIR)/queue.c $(SRC_DIR)/hair_salon2.c -o $(BIN_DIR)/hair_salon2
 
 clean:
